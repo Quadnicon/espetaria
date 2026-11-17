@@ -1,0 +1,1446 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espetinhos do ... | Gestão</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --bg: #171513;
+  --panel: #24201c;
+  --panel2: #302921;
+  --text: #f4e9d8;
+  --muted: #ad9d88;
+  --accent: #d16b32;
+  --accent2: #a94725;
+  --green: #65b879;
+  --red: #df6560;
+  --border: #40372e;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+button { cursor: pointer; }
+
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(140deg,#171513,#35251c);
+}
+
+.login-box {
+  background: var(--panel);
+  padding: 35px;
+  border-radius: 15px;
+  width: 100%;
+  max-width: 390px;
+  border: 1px solid var(--border);
+}
+
+.logo {
+  font-size: 25px;
+  font-weight: bold;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.login-box p { color: var(--muted); }
+
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  background: #171513;
+  color: white;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  margin: 7px 0 15px;
+  outline: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.btn {
+  background: var(--accent);
+  color: white;
+  padding: 12px 17px;
+  border: none;
+  border-radius: 7px;
+  font-weight: bold;
+}
+
+.btn:hover { background: var(--accent2); }
+
+.btn-secondary {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+}
+
+.btn-danger { background: #963c35; }
+
+.full { width: 100%; }
+
+#app { display: none; }
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 245px;
+  padding: 25px 17px;
+  background: #201b17;
+  border-right: 1px solid var(--border);
+  z-index: 10;
+}
+
+.sidebar .logo { margin: 8px 5px 35px; }
+
+.nav-btn {
+  width: 100%;
+  display: block;
+  padding: 13px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  margin-bottom: 5px;
+}
+
+.nav-btn:hover, .nav-btn.active {
+  background: #38291f;
+  color: #fff;
+}
+
+.logout {
+  position: absolute;
+  bottom: 25px;
+  left: 17px;
+  width: calc(100% - 34px);
+}
+
+main {
+  margin-left: 245px;
+  padding: 30px;
+  max-width: 1600px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+header h1 { margin: 0; font-size: 25px; }
+
+header p { color: var(--muted); margin-bottom: 0; }
+
+.section { display: none; }
+.section.active { display: block; }
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 17px;
+  margin-bottom: 25px;
+}
+
+.card {
+  padding: 22px;
+  border-radius: 11px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+.card small { color: var(--muted); }
+
+.card h2 {
+  font-size: 25px;
+  margin: 12px 0 0;
+}
+
+.card .positive { color: var(--green); }
+
+.panel {
+  background: var(--panel);
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  margin-bottom: 20px;
+}
+
+.panel h3 { margin-top: 0; }
+
+.grid-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-grid .wide { grid-column: 1 / -1; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 570px;
+}
+
+th, td {
+  padding: 13px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+th { color: var(--muted); }
+
+.table-wrap { overflow-x: auto; }
+
+.status {
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  background: #473829;
+}
+
+.status.entregue { color: #80d79b; }
+.status.pendente { color: #f4c16a; }
+.status.preparando { color: #8dc9f0; }
+.status.cancelado { color: #ef8982; }
+
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.actions button {
+  border: none;
+  border-radius: 5px;
+  padding: 7px;
+  color: white;
+  background: var(--panel2);
+}
+
+.empty {
+  padding: 25px;
+  text-align: center;
+  color: var(--muted);
+}
+
+#message {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 14px 20px;
+  border-radius: 8px;
+  background: #385a3e;
+  color: white;
+  display: none;
+  z-index: 99;
+}
+
+.mobile-menu { display: none; }
+
+.item-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 35px;
+  gap: 8px;
+  align-items: center;
+}
+
+.item-row button {
+  background: #963c35;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  height: 38px;
+}
+
+.item-row input, .item-row select { margin: 5px 0 10px; }
+
+@media(max-width: 1000px) {
+  .cards { grid-template-columns: repeat(2,1fr); }
+  .grid-two { grid-template-columns: 1fr; }
+}
+
+@media(max-width: 700px) {
+  .sidebar {
+    display: none;
+    width: 100%;
+    bottom: auto;
+    height: 100vh;
+  }
+
+  .sidebar.open { display: block; }
+
+  main { margin-left: 0; padding: 18px; }
+
+  .mobile-menu {
+    display: block;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+  }
+
+  header h1 { font-size: 19px; }
+
+  .cards { gap: 9px; }
+  .card { padding: 14px; }
+  .card h2 { font-size: 20px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .wide { grid-column: auto; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="logo">🔥 ESPETINHOS DO ...</div>
+    <p>Painel administrativo</p>
+
+    <form id="loginForm">
+      <label>E-mail</label>
+      <input type="email" id="email" required placeholder="Seu e-mail" value="dono@espetinhos.com" autocomplete="username">
+
+      <label>Senha</label>
+      <input type="password" id="password" required placeholder="Sua senha" autocomplete="current-password">
+
+      <button class="btn full" type="submit">Entrar no sistema</button>
+    </form>
+    <p id="loginError"></p>
+  </div>
+</div>
+
+<!-- SISTEMA -->
+
+<div id="app">
+
+<aside class="sidebar" id="sidebar">
+  <div class="logo">🔥 ESPETINHOS</div>
+
+  <button class="nav-btn active" data-section="dashboard">📊 Dashboard</button>
+  <button class="nav-btn" data-section="pedidos">🍢 Pedidos</button>
+  <button class="nav-btn" data-section="produtos">🥩 Produtos</button>
+  <button class="nav-btn" data-section="clientes">👥 Clientes</button>
+  <button class="nav-btn" data-section="despesas">💰 Despesas</button>
+  <button class="nav-btn" data-section="relatorios">📈 Relatórios</button>
+
+  <button class="btn btn-danger logout" id="logout">Sair da conta</button>
+</aside>
+
+<main>
+
+<header>
+  <div>
+    <h1 id="pageTitle">Dashboard</h1>
+    <p>Bem-vindo ao gerenciamento da sua barraca.</p>
+  </div>
+  <button class="mobile-menu" id="mobileMenu">☰ Menu</button>
+</header>
+
+<!-- DASHBOARD -->
+
+<section class="section active" id="dashboard">
+
+  <div class="cards">
+    <div class="card">
+      <small>Faturamento de hoje</small>
+      <h2 id="todayRevenue">R$ 0,00</h2>
+    </div>
+
+    <div class="card">
+      <small>Lucro estimado hoje</small>
+      <h2 class="positive" id="todayProfit">R$ 0,00</h2>
+    </div>
+
+    <div class="card">
+      <small>Pedidos de hoje</small>
+      <h2 id="todayOrders">0</h2>
+    </div>
+
+    <div class="card">
+      <small>Clientes cadastrados</small>
+      <h2 id="totalCustomers">0</h2>
+    </div>
+  </div>
+
+  <div class="grid-two">
+    <div class="panel">
+      <h3>Vendas recentes</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Valor</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recentOrders"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Resumo do mês</h3>
+      <p>Faturamento: <strong id="monthRevenue">R$ 0,00</strong></p>
+      <p>Lucro estimado: <strong id="monthProfit">R$ 0,00</strong></p>
+      <p>Despesas: <strong id="monthExpenses">R$ 0,00</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- PEDIDOS -->
+
+<section class="section" id="pedidos">
+
+  <div class="panel">
+    <h3>Novo pedido</h3>
+
+    <form id="orderForm">
+      <label>Cliente</label>
+      <select id="orderCustomer">
+        <option value="">Cliente não cadastrado</option>
+      </select>
+
+      <label>Produtos do pedido</label>
+      <div id="orderItems"></div>
+
+      <button type="button" class="btn btn-secondary" id="addItem">
+        + Adicionar produto
+      </button>
+
+      <div class="form-grid" style="margin-top:20px">
+        <div>
+          <label>Forma de pagamento</label>
+          <select id="payment">
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Pix">Pix</option>
+            <option value="Cartão de débito">Cartão de débito</option>
+            <option value="Cartão de crédito">Cartão de crédito</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Observações</label>
+          <input id="orderNotes" placeholder="Observações do pedido">
+        </div>
+      </div>
+
+      <h3>Total: <span id="orderTotal">R$ 0,00</span></h3>
+
+      <button class="btn" type="submit">Registrar pedido</button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h3>Histórico de pedidos</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Data</th>
+            <th>Total</th>
+            <th>Pagamento</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTable"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUTOS -->
+
+<section class="section" id="produtos">
+
+  <div class="panel">
+    <h3>Cadastrar produto</h3>
+
+    <form id="productForm" class="form-grid">
+      <div class="wide">
+        <label>Nome do produto</label>
+        <input id="productName" required placeholder="Ex: Espetinho de frango">
+      </div>
+
+      <div>
+        <label>Preço de venda (R$)</label>
+        <input id="productPrice" type="number" step="0.01" min="0" required>
+      </div>
+
+      <div>
+        <label>Custo por unidade (R$)</label>
+        <input id="productCost" type="number" step="0.01" min="0" required>
+      </div>
+
+      <div class="wide">
+        <button class="btn" type="submit">Salvar produto</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h3>Produtos cadastrados</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Produto</th>
+            <th>Venda</th>
+            <th>Custo</th>
+            <th>Lucro unitário</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="productsTable"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- CLIENTES -->
+
+<section class="section" id="clientes">
+
+  <div class="panel">
+    <h3>Cadastrar cliente</h3>
+
+    <form id="customerForm" class="form-grid">
+      <div>
+        <label>Nome</label>
+        <input id="customerName" required placeholder="Nome do cliente">
+      </div>
+
+      <div>
+        <label>Telefone</label>
+        <input id="customerPhone" placeholder="Telefone">
+      </div>
+
+      <div class="wide">
+        <label>Observações</label>
+        <textarea id="customerNotes" placeholder="Informações adicionais"></textarea>
+      </div>
+
+      <div class="wide">
+        <button class="btn" type="submit">Cadastrar cliente</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h3>Clientes cadastrados</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Observações</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="customersTable"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- DESPESAS -->
+
+<section class="section" id="despesas">
+
+  <div class="panel">
+    <h3>Registrar despesa</h3>
+
+    <form id="expenseForm" class="form-grid">
+      <div>
+        <label>Descrição</label>
+        <input id="expenseDescription" required placeholder="Ex: Compra de carvão">
+      </div>
+
+      <div>
+        <label>Valor (R$)</label>
+        <input id="expenseValue" type="number" min="0" step="0.01" required>
+      </div>
+
+      <div class="wide">
+        <label>Categoria</label>
+        <select id="expenseCategory">
+          <option>Ingredientes</option>
+          <option>Carvão e gás</option>
+          <option>Embalagens</option>
+          <option>Transporte</option>
+          <option>Energia e água</option>
+          <option>Outros</option>
+        </select>
+      </div>
+
+      <div class="wide">
+        <button class="btn" type="submit">Registrar despesa</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h3>Histórico de despesas</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Valor</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="expensesTable"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- RELATÓRIOS -->
+
+<section class="section" id="relatorios">
+
+  <div class="panel">
+    <h3>Relatório financeiro mensal</h3>
+
+    <label>Selecione o mês</label>
+    <input type="month" id="reportMonth">
+
+    <div class="cards" style="margin-top:20px">
+      <div class="card">
+        <small>Faturamento</small>
+        <h2 id="reportRevenue">R$ 0,00</h2>
+      </div>
+
+      <div class="card">
+        <small>Custo dos produtos</small>
+        <h2 id="reportCost">R$ 0,00</h2>
+      </div>
+
+      <div class="card">
+        <small>Despesas</small>
+        <h2 id="reportExpenses">R$ 0,00</h2>
+      </div>
+
+      <div class="card">
+        <small>Lucro estimado</small>
+        <h2 class="positive" id="reportProfit">R$ 0,00</h2>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Resumo de vendas</h3>
+      <canvas id="salesChart"></canvas>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<div id="message"></div>
+
+<script type="module">
+
+// =====================================
+// CONFIGURAÇÃO DO SUPABASE
+// =====================================
+
+// Substitua pelos dados do seu projeto.
+const SUPABASE_URL = "https://nukxuzayjmniquxrshat.supabase.co";
+const SUPABASE_KEY = "sb_publishable_uvIqGNn8LyuTUpO9hKDzHQ_meB9DS5I";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+// =====================================
+// VARIÁVEIS
+// =====================================
+
+let user = null;
+let products = [];
+let customers = [];
+let orders = [];
+let orderItems = [];
+let expenses = [];
+let chart = null;
+
+const money = value =>
+  Number(value || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
+  });
+
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+};
+
+const currentMonth = () => today().slice(0,7);
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function notify(message) {
+  const el = document.getElementById("message");
+  el.textContent = message;
+  el.style.display = "block";
+  setTimeout(() => el.style.display = "none", 3000);
+}
+
+function showError(error) {
+  console.error(error);
+  notify(error.message || "Ocorreu um erro.");
+}
+
+function dateText(value) {
+  return new Date(value).toLocaleString("pt-BR");
+}
+
+function startOfDay() {
+  return new Date(today() + "T00:00:00");
+}
+
+function startOfMonth() {
+  return new Date(currentMonth() + "-01T00:00:00");
+}
+
+// =====================================
+// AUTENTICAÇÃO
+// =====================================
+
+async function login(email, password) {
+  const { data, error } = await db.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) throw error;
+
+  user = data.user;
+  await openApp();
+}
+
+async function openApp() {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("app").style.display = "block";
+
+  await loadAll();
+}
+
+async function logout() {
+  await db.auth.signOut();
+  location.reload();
+}
+
+document.getElementById("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  try {
+    await login(
+      document.getElementById("email").value,
+      document.getElementById("password").value
+    );
+  } catch(error) {
+    document.getElementById("loginError").textContent = error.message;
+  }
+});
+
+document.getElementById("logout").onclick = logout;
+
+const { data: sessionData } = await db.auth.getSession();
+
+if (sessionData.session) {
+  user = sessionData.session.user;
+  await openApp();
+}
+
+// =====================================
+// NAVEGAÇÃO
+// =====================================
+
+document.querySelectorAll(".nav-btn").forEach(button => {
+  button.addEventListener("click", () => {
+    const section = button.dataset.section;
+
+    document.querySelectorAll(".nav-btn").forEach(b =>
+      b.classList.remove("active")
+    );
+
+    button.classList.add("active");
+
+    document.querySelectorAll(".section").forEach(s =>
+      s.classList.remove("active")
+    );
+
+    document.getElementById(section).classList.add("active");
+
+    const titles = {
+      dashboard: "Dashboard",
+      pedidos: "Gerenciamento de pedidos",
+      produtos: "Produtos",
+      clientes: "Clientes",
+      despesas: "Despesas",
+      relatorios: "Relatórios"
+    };
+
+    document.getElementById("pageTitle").textContent = titles[section];
+
+    document.getElementById("sidebar").classList.remove("open");
+  });
+});
+
+document.getElementById("mobileMenu").onclick = () => {
+  document.getElementById("sidebar").classList.toggle("open");
+};
+
+// =====================================
+// CARREGAMENTO DOS DADOS
+// =====================================
+
+async function loadAll() {
+  if (!user) return;
+
+  try {
+    const results = await Promise.all([
+      db.from("produtos").select("*").order("nome"),
+      db.from("clientes").select("*").order("nome"),
+      db.from("pedidos").select("*, clientes(nome), itens_pedido(*)").order("created_at", {ascending:false}),
+      db.from("despesas").select("*").order("created_at", {ascending:false})
+    ]);
+
+    for (const result of results) {
+      if (result.error) throw result.error;
+    }
+
+    products = results[0].data;
+    customers = results[1].data;
+    orders = results[2].data;
+    expenses = results[3].data;
+
+    renderAll();
+  } catch(error) {
+    showError(error);
+  }
+}
+
+function renderAll() {
+  renderDashboard();
+  renderProducts();
+  renderCustomers();
+  renderOrders();
+  renderExpenses();
+  renderCustomerOptions();
+  updateOrderOptions();
+  renderReport();
+}
+
+// =====================================
+// DASHBOARD E FINANÇAS
+// =====================================
+
+function calculateProfit(list) {
+  let revenue = 0;
+  let cost = 0;
+
+  list.filter(o => o.status === "entregue").forEach(order => {
+    revenue += Number(order.total);
+
+    (order.itens_pedido || []).forEach(item => {
+      cost += Number(item.custo_unitario) * Number(item.quantidade);
+    });
+  });
+
+  return { revenue, cost, profit: revenue - cost };
+}
+
+function renderDashboard() {
+  const now = startOfDay();
+  const month = startOfMonth();
+
+  const daily = orders.filter(o =>
+    new Date(o.created_at) >= now &&
+    o.status !== "cancelado"
+  );
+
+  const monthly = orders.filter(o =>
+    new Date(o.created_at) >= month &&
+    o.status !== "cancelado"
+  );
+
+  const dailyCompleted = calculateProfit(daily);
+  const monthlyCompleted = calculateProfit(monthly);
+
+  const monthExpenses = expenses
+    .filter(e => new Date(e.created_at) >= month)
+    .reduce((sum,e) => sum + Number(e.valor),0);
+
+  document.getElementById("todayRevenue").textContent =
+    money(dailyCompleted.revenue);
+
+  document.getElementById("todayProfit").textContent =
+    money(dailyCompleted.profit);
+
+  document.getElementById("todayOrders").textContent = daily.length;
+
+  document.getElementById("totalCustomers").textContent =
+    customers.length;
+
+  document.getElementById("monthRevenue").textContent =
+    money(monthlyCompleted.revenue);
+
+  document.getElementById("monthProfit").textContent =
+    money(monthlyCompleted.profit - monthExpenses);
+
+  document.getElementById("monthExpenses").textContent =
+    money(monthExpenses);
+
+  document.getElementById("recentOrders").innerHTML =
+    orders.slice(0,6).map(o => `
+      <tr>
+        <td>${escapeHTML(o.clientes?.nome || "Avulso")}</td>
+        <td>${money(o.total)}</td>
+        <td><span class="status ${o.status}">${escapeHTML(o.status)}</span></td>
+      </tr>
+    `).join("") || `<tr><td colspan="3" class="empty">Nenhum pedido registrado.</td></tr>`;
+}
+
+// =====================================
+// PRODUTOS
+// =====================================
+
+document.getElementById("productForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  try {
+    const product = {
+      owner_id: user.id,
+      nome: document.getElementById("productName").value.trim(),
+      preco_venda: Number(document.getElementById("productPrice").value),
+      custo: Number(document.getElementById("productCost").value)
+    };
+
+    if (product.preco_venda < 0 || product.custo < 0) {
+      throw new Error("Os valores não podem ser negativos.");
+    }
+
+    const { error } = await db.from("produtos").insert(product);
+
+    if (error) throw error;
+
+    e.target.reset();
+    notify("Produto cadastrado!");
+    await loadAll();
+  } catch(error) {
+    showError(error);
+  }
+});
+
+function renderProducts() {
+  document.getElementById("productsTable").innerHTML =
+    products.map(p => `
+      <tr>
+        <td>${escapeHTML(p.nome)}</td>
+        <td>${money(p.preco_venda)}</td>
+        <td>${money(p.custo)}</td>
+        <td>${money(p.preco_venda-p.custo)}</td>
+        <td class="actions">
+          <button onclick="editProduct('${p.id}')">Editar</button>
+          <button onclick="deleteProduct('${p.id}')">Excluir</button>
+        </td>
+      </tr>
+    `).join("") || `<tr><td colspan="5" class="empty">Nenhum produto cadastrado.</td></tr>`;
+}
+
+window.editProduct = async id => {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+
+  const nome = prompt("Nome do produto:",p.nome);
+  if (nome === null) return;
+
+  const preco = prompt("Preço de venda:",p.preco_venda);
+  if (preco === null) return;
+
+  const custo = prompt("Custo por unidade:",p.custo);
+  if (custo === null) return;
+
+  if (!nome.trim() || !Number.isFinite(Number(preco)) ||
+      !Number.isFinite(Number(custo)) ||
+      Number(preco) < 0 || Number(custo) < 0) {
+    return notify("Dados inválidos.");
+  }
+
+  const { error } = await db.from("produtos")
+    .update({
+      nome: nome.trim(),
+      preco_venda: Number(preco),
+      custo: Number(custo)
+    })
+    .eq("id",id);
+
+  if (error) return showError(error);
+
+  notify("Produto atualizado!");
+  await loadAll();
+};
+
+window.deleteProduct = async id => {
+  if (!confirm("Deseja excluir este produto?")) return;
+
+  const { error } = await db.from("produtos")
+    .delete().eq("id",id);
+
+  if (error) return showError(error);
+
+  notify("Produto excluído!");
+  await loadAll();
+};
+
+// =====================================
+// CLIENTES
+// =====================================
+
+document.getElementById("customerForm").addEventListener("submit",async e => {
+  e.preventDefault();
+
+  try {
+    const customer = {
+      owner_id: user.id,
+      nome: document.getElementById("customerName").value.trim(),
+      telefone: document.getElementById("customerPhone").value.trim(),
+      observacoes: document.getElementById("customerNotes").value.trim()
+    };
+
+    const { error } = await db.from("clientes").insert(customer);
+    if (error) throw error;
+
+    e.target.reset();
+    notify("Cliente cadastrado!");
+    await loadAll();
+  } catch(error) {
+    showError(error);
+  }
+});
+
+function renderCustomers() {
+  document.getElementById("customersTable").innerHTML =
+    customers.map(c => `
+      <tr>
+        <td>${escapeHTML(c.nome)}</td>
+        <td>${escapeHTML(c.telefone)}</td>
+        <td>${escapeHTML(c.observacoes)}</td>
+        <td class="actions">
+          <button onclick="editCustomer('${c.id}')">Editar</button>
+          <button onclick="deleteCustomer('${c.id}')">Excluir</button>
+        </td>
+      </tr>
+    `).join("") || `<tr><td colspan="4" class="empty">Nenhum cliente cadastrado.</td></tr>`;
+}
+
+window.editCustomer = async id => {
+  const c = customers.find(x => x.id === id);
+  if (!c) return;
+
+  const nome = prompt("Nome:",c.nome);
+  if (nome === null) return;
+
+  const telefone = prompt("Telefone:",c.telefone || "");
+  if (telefone === null) return;
+
+  const observacoes = prompt("Observações:",c.observacoes || "");
+  if (observacoes === null) return;
+
+  if (!nome.trim()) return notify("Informe o nome.");
+
+  const { error } = await db.from("clientes")
+    .update({nome:nome.trim(),telefone,observacoes})
+    .eq("id",id);
+
+  if (error) return showError(error);
+
+  notify("Cliente atualizado!");
+  await loadAll();
+};
+
+window.deleteCustomer = async id => {
+  if (!confirm("Excluir este cliente?")) return;
+
+  const { error } = await db.from("clientes")
+    .delete().eq("id",id);
+
+  if (error) return showError(error);
+
+  notify("Cliente excluído!");
+  await loadAll();
+};
+
+function renderCustomerOptions() {
+  const select = document.getElementById("orderCustomer");
+
+  select.innerHTML =
+    `<option value="">Cliente não cadastrado</option>` +
+    customers.map(c =>
+      `<option value="${c.id}">${escapeHTML(c.nome)}</option>`
+    ).join("");
+}
+
+// =====================================
+// PEDIDOS
+// =====================================
+
+function updateOrderOptions() {
+  document.querySelectorAll(".product-select").forEach(select => {
+    const oldValue = select.value;
+
+    select.innerHTML =
+      `<option value="">Selecione um produto</option>` +
+      products.filter(p => p.ativo).map(p =>
+        `<option value="${p.id}">${escapeHTML(p.nome)} - ${money(p.preco_venda)}</option>`
+      ).join("");
+
+    if (products.some(p => p.id === oldValue && p.ativo)) {
+      select.value = oldValue;
+    }
+  });
+
+  updateTotal();
+}
+
+function addOrderItem() {
+  const container = document.getElementById("orderItems");
+  const row = document.createElement("div");
+
+  row.className = "item-row";
+
+  row.innerHTML = `
+    <select class="product-select">
+      <option value="">Selecione um produto</option>
+    </select>
+    <input class="item-quantity" type="number" min="1" value="1">
+    <button type="button" class="remove-item">×</button>
+  `;
+
+  container.appendChild(row);
+
+  row.querySelector(".product-select").addEventListener("change",updateTotal);
+  row.querySelector(".item-quantity").addEventListener("input",updateTotal);
+
+  row.querySelector(".remove-item").onclick = () => {
+    row.remove();
+    updateTotal();
+  };
+
+  updateOrderOptions();
+}
+
+document.getElementById("addItem").onclick = addOrderItem;
+
+function updateTotal() {
+  let total = 0;
+
+  document.querySelectorAll("#orderItems .item-row").forEach(row => {
+    const id = row.querySelector("select").value;
+    const quantity = Number(row.querySelector("input").value);
+    const p = products.find(x => x.id === id);
+
+    if (p && quantity > 0) {
+      total += Number(p.preco_venda) * quantity;
+    }
+  });
+
+  document.getElementById("orderTotal").textContent = money(total);
+}
+
+addOrderItem();
+
+document.getElementById("orderForm").addEventListener("submit",async e => {
+  e.preventDefault();
+
+  try {
+    const items = [];
+
+    document.querySelectorAll("#orderItems .item-row").forEach(row => {
+      const id = row.querySelector("select").value;
+      const quantity = Number(row.querySelector("input").value);
+      const p = products.find(x => x.id === id);
+
+      if (p && Number.isInteger(quantity) && quantity > 0) {
+        items.push({
+          produto_id: p.id,
+          nome_produto: p.nome,
+          quantidade: quantity,
+          preco_unitario: Number(p.preco_venda),
+          custo_unitario: Number(p.custo)
+        });
+      }
+    });
+
+    if (!items.length) {
+      throw new Error("Adicione pelo menos um produto.");
+    }
+
+    const total = items.reduce(
+      (sum,item) => sum + item.preco_unitario * item.quantidade,0
+    );
+
+    const order = {
+      owner_id: user.id,
+      cliente_id: document.getElementById("orderCustomer").value || null,
+      forma_pagamento: document.getElementById("payment").value,
+      observacoes: document.getElementById("orderNotes").value,
+      total,
+      status: "pendente"
+    };
+
+    const { data, error } = await db.from("pedidos")
+      .insert(order).select().single();
+
+    if (error) throw error;
+
+    const { error: itemError } = await db.from("itens_pedido")
+      .insert(items.map(item => ({
+        ...item,
+        pedido_id: data.id
+      })));
+
+    if (itemError) {
+      await db.from("pedidos").delete().eq("id",data.id);
+      throw itemError;
+    }
+
+    e.target.reset();
+    document.getElementById("orderItems").innerHTML = "";
+    addOrderItem();
+
+    notify("Pedido registrado!");
+    await loadAll();
+  } catch(error) {
+    showError(error);
+  }
+});
+
+function renderOrders() {
+  document.getElementById("ordersTable").innerHTML =
+    orders.map(o => `
+      <tr>
+        <td>${escapeHTML(o.clientes?.nome || "Avulso")}</td>
+        <td>${dateText(o.created_at)}</td>
+        <td>${money(o.total)}</td>
+        <td>${escapeHTML(o.forma_pagamento)}</td>
+        <td>
+          <select onchange="changeStatus('${o.id}',this.value)">
+            ${["pendente","preparando","entregue","cancelado"].map(s =>
+              `<option value="${s}" ${o.status===s?"selected":""}>${s}</option>`
+            ).join("")}
+          </select>
+        </td>
+        <td class="actions">
+          <button onclick="deleteOrder('${o.id}')">Excluir</button>
+        </td>
+      </tr>
+    `).join("") || `<tr><td colspan="6" class="empty">Nenhum pedido registrado.</td></tr>`;
+}
+
+window.changeStatus = async (id,status) => {
+  const { error } = await db.from("pedidos")
+    .update({status}).eq("id",id);
+
+  if (error) return showError(error);
+
+  notify("Status atualizado!");
+  await loadAll();
+};
+
+window.deleteOrder = async id => {
+  if (!confirm("Excluir este pedido?")) return;
+
+  const { error } = await db.from("pedidos").delete().eq("id",id);
+
+  if (error) return showError(error);
+
+  notify("Pedido excluído!");
+  await loadAll();
+};
+
+// =====================================
+// DESPESAS
+// =====================================
+
+document.getElementById("expenseForm").addEventListener("submit",async e => {
+  e.preventDefault();
+
+  try {
+    const expense = {
+      owner_id: user.id,
+      descricao: document.getElementById("expenseDescription").value.trim(),
+      valor: Number(document.getElementById("expenseValue").value),
+      categoria: document.getElementById("expenseCategory").value
+    };
+
+    if (expense.valor < 0) throw new Error("Valor inválido.");
+
+    const { error } = await db.from("despesas").insert(expense);
+    if (error) throw error;
+
+    e.target.reset();
+    notify("Despesa registrada!");
+    await loadAll();
+  } catch(error) {
+    showError(error);
+  }
+});
+
+function renderExpenses() {
+  document.getElementById("expensesTable").innerHTML =
+    expenses.map(e => `
+      <tr>
+        <td>${escapeHTML(e.descricao)}</td>
+        <td>${escapeHTML(e.categoria)}</td>
+        <td>${money(e.valor)}</td>
+        <td>${dateText(e.created_at)}</td>
+        <td class="actions">
+          <button onclick="deleteExpense('${e.id}')">Excluir</button>
+        </td>
+      </tr>
+    `).join("") || `<tr><td colspan="5" class="empty">Nenhuma despesa registrada.</td></tr>`;
+}
+
+window.deleteExpense = async id => {
+  if (!confirm("Excluir esta despesa?")) return;
+
+  const { error } = await db.from("despesas").delete().eq("id",id);
+
+  if (error) return showError(error);
+
+  notify("Despesa excluída!");
+  await loadAll();
+};
+
+// =====================================
+// RELATÓRIO MENSAL
+// =====================================
+
+document.getElementById("reportMonth").value = currentMonth();
+
+document.getElementById("reportMonth").addEventListener("change",renderReport);
+
+function renderReport() {
+  const month = document.getElementById("reportMonth").value || currentMonth();
+  const start = new Date(month + "-01T00:00:00");
+  const end = new Date(start);
+  end.setMonth(end.getMonth()+1);
+
+  const list = orders.filter(o =>
+    new Date(o.created_at) >= start &&
+    new Date(o.created_at) < end
+  );
+
+  const completed = calculateProfit(list);
+
+  const totalExpenses = expenses.filter(e =>
+    new Date(e.created_at) >= start &&
+    new Date(e.created_at) < end
+  ).reduce((sum,e) => sum + Number(e.valor),0);
+
+  const profit = completed.profit - totalExpenses;
+
+  document.getElementById("reportRevenue").textContent = money(completed.revenue);
+  document.getElementById("reportCost").textContent = money(completed.cost);
+  document.getElementById("reportExpenses").textContent = money(totalExpenses);
+  document.getElementById("reportProfit").textContent = money(profit);
+
+  const dailySales = {};
+
+  list.filter(o => o.status === "entregue").forEach(o => {
+    const day = new Date(o.created_at).getDate();
+    dailySales[day] = (dailySales[day] || 0) + Number(o.total);
+  });
+
+  const labels = Object.keys(dailySales).sort((a,b) => Number(a)-Number(b));
+  const values = labels.map(d => dailySales[d]);
+
+  if (chart) chart.destroy();
+
+  const canvas = document.getElementById("salesChart");
+
+  chart = new Chart(canvas,{
+    type: "bar",
+    data: {
+      labels: labels.map(d => "Dia " + d),
+      datasets: [{
+        label: "Vendas",
+        data: values,
+        backgroundColor: "#d16b32",
+        borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {display:false}
+      },
+      scales: {
+        y: {beginAtZero:true}
+      }
+    }
+  });
+}
+
+</script>
+</body>
+</html>
+```
